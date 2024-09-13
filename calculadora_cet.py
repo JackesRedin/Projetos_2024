@@ -218,11 +218,12 @@ valor_parcela = np.round(npf.pmt(taxa_am, parcelas, -vlr_total_financiado), 2)
 
 valor_principal = npf.ppmt(taxa_am, i, parcelas, -vlr_financiado)
 
-
+valor_total_contrato = np.round(valor_parcela*parcelas, 2)
 
 
 col1, col2, col3 = st.columns(3)
-col1.markdown(f"*Valor Total Financiado:* **{vlr_total_financiado:,.2f}**".replace(",", "X").replace(".", ",").replace("X", "."))
+col1.markdown(f"*Valor Total Contrato:* **{valor_total_contrato:,.2f}**".replace(",", "X").replace(".", ",").replace("X", "."))
+# col1.markdown(f"*Valor Total Financiado:* **{vlr_total_financiado:,.2f}**".replace(",", "X").replace(".", ",").replace("X", "."))
 # col1.write(f"*Valor Financiado:* **{vlr_financiado:,.2f}**".replace(",", "X").replace(".", ",").replace("X", "."))
 col1.write(f"*Valor Parcela:* **{valor_parcela:,.2f}**".replace(",", "X").replace(".", ",").replace("X", "."))
 # col1.write(f"Valor Total iof normal: {total_iof_normal:,.2f}".replace(",", "X").replace(".", ",").replace("X", "."))
