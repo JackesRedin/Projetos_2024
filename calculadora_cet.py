@@ -221,7 +221,7 @@ valor_principal = npf.ppmt(taxa_am, i, parcelas, -vlr_financiado)
 
 
 
-col1, col2, col3, col4 = st.columns(4)
+col1, col2, col3 = st.columns(3)
 col1.markdown(f"*Valor Total Financiado:* **{vlr_total_financiado:,.2f}**".replace(",", "X").replace(".", ",").replace("X", "."))
 # col1.write(f"*Valor Financiado:* **{vlr_financiado:,.2f}**".replace(",", "X").replace(".", ",").replace("X", "."))
 col1.write(f"*Valor Parcela:* **{valor_parcela:,.2f}**".replace(",", "X").replace(".", ",").replace("X", "."))
