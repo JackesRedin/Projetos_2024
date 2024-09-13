@@ -280,9 +280,24 @@ tabela_parcelas.set_index("Número da Parcela", inplace=True)
 #tabela_parcelas.reset_index(drop=True, inplace=True)
 
 
+
+# Função para formatar os valores numéricos no padrão brasileiro
+def formato_brazeiro(value):
+    return f"{value:,.2f}".replace(",", "X").replace(".", ",").replace("X", ".")
+
+# Aplicar a função apenas nas colunas numéricas 'col1' e 'col2'
+tabela_parcelas[["Valor Principal de IOF","Valor IOF Normal",
+                 "Valor IOF Adicional","Valor Principal",
+                 "Valor de Juros","Valor Parcela",
+                 "Saldo Devedor"]] = tabela_parcelas[["Valor Principal de IOF","Valor IOF Normal",
+                                                      "Valor IOF Adicional","Valor Principal",
+                                                      "Valor de Juros","Valor Parcela",
+                                                      "Saldo Devedor"]].applymap(formato_brazeiro)
+
 st.dataframe(tabela_parcelas)
 
 
+"Valor Principal de IOF","Valor IOF Normal","Valor IOF Adicional","Valor Principal","Valor de Juros","Valor Parcela","Saldo Devedor"
 
 
 
