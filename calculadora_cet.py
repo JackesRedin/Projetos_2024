@@ -13,8 +13,8 @@ st.set_page_config(
     page_icon=":fast_forward:",
     layout="wide",    initial_sidebar_state="expanded",
     menu_items={
-        # 'Get Help': 'https://www.google.com',
-        # 'Report a bug': "https://www.google.com",
+        'Get Help': 'https://github.com/JackesRedin',
+        'Report a bug': "https://github.com/JackesRedin",
         'About': "# Simulador de Capital de Giro - V1 *by JR*"
     }
 )
