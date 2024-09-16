@@ -237,9 +237,9 @@ col2.markdown(f"*Valor IOF Total:* **{total_iof_total:,.2f}**".replace(",", "X")
 
 # Construindo o DataFrame
 tabela_parcelas = pd.DataFrame({
-    "Número da Parcela": range(1, parcelas + 1),
-    "Data de Vencimento": dt_vencimentos,
-    "Dias Cobrados IOF": dias_iof,
+    "Nº Parcela": range(1, parcelas + 1),
+    "Dt Vencimento": dt_vencimentos,
+    "Dias IOF": dias_iof,
     "Valor Principal de IOF": vlr_principal_iof,
     "Valor IOF Normal": vlr_iof_normal,
     "Valor IOF Adicional": vlr_iof_adicional,
@@ -255,16 +255,16 @@ def calcular_vlr_principal_parcela(numero_parcela):
 
 
 # Aplicar a função diretamente na coluna "Número da Parcela" usando apply
-tabela_parcelas["Valor Principal"] = tabela_parcelas["Número da Parcela"].apply(calcular_vlr_principal_parcela)
+tabela_parcelas["Valor Principal"] = tabela_parcelas["Nº Parcela"].apply(calcular_vlr_principal_parcela)
 tabela_parcelas["Valor de Juros"] = tabela_parcelas["Valor Parcela"] - tabela_parcelas["Valor Principal"]
 tabela_parcelas["Saldo Devedor"] = np.round(vlr_total_financiado - tabela_parcelas["Valor Principal"].cumsum(), 2)
 
 vlr_total_juros = np.round(sum(tabela_parcelas["Valor de Juros"]), 2)
-col2.markdown(f"*Valor Total de Juros:* **{vlr_total_juros:,.2f}**".replace(",", "X").replace(".", ",").replace("X", "."))
+col1.markdown(f"*Valor Total de Juros:* **{vlr_total_juros:,.2f}**".replace(",", "X").replace(".", ",").replace("X", "."))
 
 # Criar fluxos de caixa
 fluxos_de_caixa = [-valor_emprestimo] + [valor_parcela]*parcelas
-#st.write(fluxos_de_caixa)
+#st.write(fluxos_de_caixa)  
 
 # Calcular a TIR (Taxa Interna de Retorno) para o CET mensal
 cet_mensal = npf.irr(fluxos_de_caixa)
@@ -273,10 +273,10 @@ cet_mensal = npf.irr(fluxos_de_caixa)
 cet_anual = (1 + cet_mensal) ** 12 - 1
 
 # Exibir os resultados
-col3.markdown(f"CET mensal: **{cet_mensal:.2%}**")
-col3.markdown(f"CET anual: **{cet_anual:.2%}**")
+col2.markdown(f"CET mensal: **{cet_mensal:.2%}**")
+col2.markdown(f"CET anual: **{cet_anual:.2%}**")
 
-tabela_parcelas.set_index("Número da Parcela", inplace=True)
+tabela_parcelas.set_index("Nº Parcela", inplace=True)
 #tabela_parcelas.reset_index(drop=True, inplace=True)
 
 
@@ -294,17 +294,31 @@ tabela_parcelas[["Valor Principal de IOF","Valor IOF Normal",
                                                       "Valor de Juros","Valor Parcela",
                                                       "Saldo Devedor"]].applymap(formato_brazeiro)
 
+
+tabela_parcelas = tabela_parcelas.drop(columns=["Valor Principal de IOF","Valor IOF Normal","Valor IOF Adicional"])
+tabela_parcelas['Dt Vencimento'] = pd.to_datetime(tabela_parcelas['Dt Vencimento']) 
+tabela_parcelas['Dt Vencimento'] = tabela_parcelas['Dt Vencimento'].dt.strftime("%d/%m/%Y")
+
 st.dataframe(tabela_parcelas)
 
 
-"Valor Principal de IOF","Valor IOF Normal","Valor IOF Adicional","Valor Principal","Valor de Juros","Valor Parcela","Saldo Devedor"
+# "Valor Principal de IOF","Valor IOF Normal","Valor IOF Adicional","Valor Principal","Valor de Juros","Valor Parcela","Saldo Devedor"
 
 
 
 st.markdown(''' 
             
             
+            
+            
             ''')
 
+"---"
+st.markdown(''' 
+            
+            
+            
+            
+            ''')
 st.caption("Desenvolido por :blue[Jackes Redin] (https://github.com/JackesRedin)")
 
