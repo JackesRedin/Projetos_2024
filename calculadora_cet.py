@@ -164,7 +164,7 @@ with st.expander("Índices de Mercado", icon="📈"):
     
     opcoes_busca = ["Mercado", "Combustiveis", "Juros", "Finanças", "Tecnologia", "Esportes", "Educação"]
     
-    colll1, colll2, colll3 = st.columns(3)
+    colll1, colll2 = st.columns(2)
 
     # Inicializar a lista de opções de busca no session state
     if 'opcoes_busca' not in st.session_state:
