@@ -7,6 +7,8 @@ import locale
 from dateutil.relativedelta import relativedelta
 import json
 import requests
+from GoogleNews import GoogleNews
+import time
 
 st.set_page_config(
     page_title="Simmulador de Capital de Giro",
@@ -23,24 +25,25 @@ st.set_page_config(
 st.sidebar.header("Simulação Capital de Giro	:fast_forward:")
 
 
-
 #CONSULTA API BANCO CENTRAL
 #O serviço permite também recuperar os N últimos valores de uma determinada série:
 #
 #https://api.bcb.gov.br/dados/serie/bcdata.sgs.{codigo_serie}/dados/ultimos/{N}?formato=json
 #https://api.bcb.gov.br/dados/serie/bcdata.sgs.432/dados?formato=json&dataInicial=01/01/2024
-#codigo celic api 1178 dia
-#codigo celic api 432 META
+#codigo celic api 1178 	Taxa de juros - Selic anualizada base 252
+#codigo celic api 432 Taxa de juros - Meta Selic definida pelo Copom
 #codigo IPCA 433
 #codigo IGP-M 189
-
+#codigo 1 - Taxa de câmbio - Livre - Dólar americano (venda) - diário R$/US$ https://www.bcb.gov.br/estatisticas/detalhamentoGrafico/graficosestatisticas/cambio
+# 20635
 
 # api_selic = "https://api.bcb.gov.br/dados/serie/bcdata.sgs.1178/dados?formato=json&dataInicial=01/01/2024"
 
 
+
 @st.cache_data
 def consulta_api(codigo_bacen):
-    url = f"https://api.bcb.gov.br/dados/serie/bcdata.sgs.{codigo_bacen}/dados?formato=json&dataInicial=01/01/2023"
+    url = f"https://api.bcb.gov.br/dados/serie/bcdata.sgs.{codigo_bacen}/dados?formato=json&dataInicial=01/01/2024"
     global dados_bacen
     retorno = requests.get(url=url)
     dados_bacen = retorno.json()
@@ -48,10 +51,29 @@ def consulta_api(codigo_bacen):
     return dados_bacen
 
 #armazenando consultas api bacen
+with st.spinner("Aguarde... Atualizando Api Bacen"):
+    dados_selic = consulta_api(432)
+    time.sleep(1)
+    dados_ipca = consulta_api(433)
+    dados_igpm = consulta_api(189)
+    dados_usd = consulta_api(1)
 
-dados_selic = consulta_api(1178)
-dados_ipca = consulta_api(433)
-dados_igpm = consulta_api(189)
+@st.cache_data    
+def consulta_news(assunto):
+    
+    googlenews = GoogleNews(period='d')
+    googlenews.clear()
+    
+    googlenews.set_lang("pt")
+    #limpa consulta anterior
+        
+    googlenews.search(assunto)
+    
+    news = googlenews.result()
+    
+    return news
+    
+
 
 #selic
 
@@ -65,9 +87,19 @@ for dado in reversed(dados_selic):
     if dado['valor'] != selic_atual:
         valor_anterior_diferente = dado
         break
+
     
 selic_atual = float(selic_atual)
 selic_anterior = float(valor_anterior_diferente["valor"])  # Valor anterior da Taxa Selic
+usd_atual = np.round(float(dados_usd[-1]["valor"]),2)
+usd_dt = dados_usd[-1]["data"]
+usd_anterior = np.round(float(dados_usd[-2]["valor"]), 2)
+
+
+# Calculando a variação
+variacao_selic = selic_atual - selic_anterior
+variacao_usd = np.round((usd_atual - usd_anterior), 2)
+
 
 #dados para minigráficos
 
@@ -76,6 +108,11 @@ df_selic = pd.DataFrame(dados_selic)
 df_selic["valor"] = df_selic["valor"].astype(float)
 df_selic['data'] = pd.to_datetime(df_selic['data'], format="%d/%m/%Y")
 df_selic = df_selic.set_index("data")
+
+df_usd = pd.DataFrame(dados_usd)
+df_usd["valor"] = df_usd["valor"].astype(float)
+df_usd['data'] = pd.to_datetime(df_usd['data'], format="%d/%m/%Y")
+df_usd = df_usd.set_index("data")
 
 df_ipca = pd.DataFrame(dados_ipca)
 df_ipca["valor"] = df_ipca["valor"].astype(float)
@@ -93,22 +130,146 @@ df_igpm.rename(columns={"valor": "IGP-M"}, inplace=True)
 
 df_unificado = pd.merge(df_igpm, df_ipca, on="data", how="outer")
 
+
+
 ipca_atual = df_unificado["IPCA"][-1]
 ipca_atual_dt = df_unificado.index[-1]
 igpm_atual = df_unificado["IGP-M"][-1]
 ipca_atual_dt = pd.to_datetime(ipca_atual_dt).strftime('%d/%m/%Y')
 
-# Calculando a variação
-variacao_selic = selic_atual - selic_anterior
+
+
 
 with st.expander("Índices de Mercado", icon="📈"):
     coll1, coll2, coll3, coll4 = st.columns(4)
     #quadrinhos  de indicadores e métricas
-    coll1.metric(label="Taxa Selic Anterior", value=f"{selic_anterior}%")
-    coll2.metric(label="Taxa Selic Atual", value=f"{selic_atual}%", delta=f"{variacao_selic}%")
-    coll3.metric(label=f"IPCA {ipca_atual_dt}", value=f"{ipca_atual}%")
+    # coll1.metric(label="Taxa Meta Selic Anterior¹", value=f"{selic_anterior}%")
+    coll1.metric(label="Taxa Meta Selic Atual¹", value=f"{selic_atual}%", delta=f"{variacao_selic}%")
+    coll1.caption("¹% a.a., dados diários ")
+    
+    coll2.metric(label=f"US$ {usd_dt}", value=f"{usd_atual}", delta=f"{variacao_usd}", delta_color = "inverse")   
+    
+    coll3.metric(label=f"IPCA Índice Geral {ipca_atual_dt}", value=f"{ipca_atual}%")
+    
     coll4.metric(label=f"IGP-M {ipca_atual_dt}", value=f"{igpm_atual}%")
+    
+    st.write("**Notícias**")
 
+
+    #ATUALIZAR noticias para container
+
+    #tabela para ordenar noticias
+    # tabela_news = pd.DataFrame(columns=["title", "media", "date", "desc", "link"])
+    tabela_news = []
+    
+    opcoes_busca = ["Mercado", "Combustiveis", "Juros", "Finanças", "Tecnologia", "Esportes", "Educação"]
+    
+    colll1, colll2, colll3 = st.columns(3)
+
+    # Inicializar a lista de opções de busca no session state
+    if 'opcoes_busca' not in st.session_state:
+        st.session_state.opcoes_busca = ["Economia", "Mercado", "Combustiveis", "Juros", "Finanças", "Tecnologia", "Esportes", "Educação"]
+        
+    # Inicializar a lista de seleção padrão (termos previamente selecionados)
+    if 'default_busca' not in st.session_state:
+        st.session_state.default_busca = st.session_state.opcoes_busca[1:3]
+
+    novo_assunto = colll1.text_input("*Digite para adicionar um assunto na lista:*")
+    
+    # Se houver um novo assunto e ele não estiver na lista, adicioná-lo e atualizar o default
+    if novo_assunto and novo_assunto not in st.session_state.opcoes_busca:
+        st.session_state.opcoes_busca.insert(0, novo_assunto)
+        # Atualizar os termos padrão com o novo assunto
+        st.session_state.default_busca = [novo_assunto] + st.session_state.default_busca[:2]  # Manter os dois últimos defaults anteriores
+
+    # Exibir o multiselect com as opções atualizadas
+    busca_news = colll1.multiselect(
+        "*Selecione os termos das notícias*",
+        options=st.session_state.opcoes_busca,
+        default=st.session_state.default_busca,
+        max_selections=5
+    )
+
+   
+    # st.write(busca_news)        
+
+
+    # ajustar lOOP INTERATIVO
+      
+    # for i in busca_news:
+    #     st.write(i)
+    
+    #     st.write(busca_news[i]) 
+    #     time.sleep(1) 
+      
+            
+    # mercado = consulta_news("mercado financeiro")
+    # juros = consulta_news("juros")
+    # combustivel = consulta_news("combustivel") 
+    # busca = consulta_news(busca_news)
+    
+    
+    for i in busca_news:
+            
+        busca = consulta_news(i) 
+          
+        for i in range(1, 3):
+            if busca_news:
+                titulo = busca[i]["title"]
+                fonte = busca[i]["media"]
+                quando = busca[i]["date"]
+                noticia = busca[i]["desc"]
+                link = busca[i]["link"]
+                         
+                tabela_news.append([titulo, fonte, quando, noticia, link, busca_news])
+                pass
+            
+                    
+        
+    df_news = pd.DataFrame(tabela_news, columns=["Título", "Fonte", "Quando", "Noticia", "Link", "Assunto"])
+    
+    # ajusta link
+    df_news['Link'] = df_news['Link'].apply(lambda x: x.split('&')[0])
+    
+    
+    # st.write(df_news) #COMENTAR   
+
+
+     
+    
+    conteiner_vazio = st.container(height=400)
+    
+    for index, row in df_news.iterrows():
+        with conteiner_vazio:
+            link1 = row["Link"]
+            
+            st.write(f'''{row["Assunto"]}: **{row["Título"]}**   -  
+                     {row["Noticia"]}      *{row["Quando"]}*
+                    
+                                    ''')
+            st.link_button(f"Link: {row["Fonte"]}", link1)
+    
+    
+    indice_bacen = ("Selic", "US$", "IPCA/IGP-M")
+
+    
+    # indice_bacen = st.selectbox(f"Indicador Bacen", indice_bacen)
+
+    if indice_bacen == "Selic":
+        base_graf = df_selic
+        
+    elif indice_bacen == "US$":
+        base_graf = df_usd
+
+    elif indice_bacen == "IPCA/IGP-M":
+        base_graf = df_unificado        
+        #mostra grafico na barra lateral
+    # st.sidebar.line_chart(base_graf, height=200 )
+    # st.line_chart(base_graf, height=200 )
+            
+            
+    
+    
 st.header("Resultado da Simulação")
 
 
@@ -124,22 +285,7 @@ tac = st.sidebar.number_input("TAC", value=3000, placeholder="1000", step=100)
 dt_inicio = st.sidebar.date_input("Data Empréstimo", format="DD/MM/YYYY" ) 
 
 st.sidebar.divider()
-st.sidebar.subheader("Gráfico")
 
-
-indice_bacen = ("Selic", "IPCA/IGP-M")
-
-indice_bacen = st.sidebar.selectbox(f"Indicador Bacen", indice_bacen)
-
-if indice_bacen == "Selic":
-    base_graf = df_selic
-
-elif indice_bacen == "IPCA/IGP-M":
-    base_graf = df_unificado
-
-
-#mostra grafico na barra lateral
-st.sidebar.line_chart(base_graf, height=200 )
 
 #dados fixos
 iof_dia = 0.000041
@@ -299,7 +445,7 @@ tabela_parcelas = tabela_parcelas.drop(columns=["Valor Principal de IOF","Valor 
 tabela_parcelas['Dt Vencimento'] = pd.to_datetime(tabela_parcelas['Dt Vencimento']) 
 tabela_parcelas['Dt Vencimento'] = tabela_parcelas['Dt Vencimento'].dt.strftime("%d/%m/%Y")
 
-st.dataframe(tabela_parcelas)
+st.dataframe(tabela_parcelas, height=600)
 
 
 # "Valor Principal de IOF","Valor IOF Normal","Valor IOF Adicional","Valor Principal","Valor de Juros","Valor Parcela","Saldo Devedor"
@@ -322,3 +468,8 @@ st.markdown('''
             ''')
 st.caption("Desenvolido por :blue[Jackes Redin] (https://github.com/JackesRedin)")
 
+
+
+
+    
+    
