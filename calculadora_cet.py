@@ -174,7 +174,7 @@ with st.expander("Índices de Mercado", icon="📈"):
     if 'default_busca' not in st.session_state:
         st.session_state.default_busca = st.session_state.opcoes_busca[1:3]
 
-    novo_assunto = colll1.text_input("*Digite para adicionar um assunto na lista:*")
+    novo_assunto = colll1.text_input("*Digite para adicionar uma palavra na lista:*")
     
     # Se houver um novo assunto e ele não estiver na lista, adicioná-lo e atualizar o default
     if novo_assunto and novo_assunto not in st.session_state.opcoes_busca:
@@ -184,7 +184,7 @@ with st.expander("Índices de Mercado", icon="📈"):
 
     # Exibir o multiselect com as opções atualizadas
     busca_news = colll1.multiselect(
-        "*Selecione os termos das notícias*",
+        "*Selecione os assuntos das notícias*",
         options=st.session_state.opcoes_busca,
         default=st.session_state.default_busca,
         max_selections=5
@@ -209,9 +209,9 @@ with st.expander("Índices de Mercado", icon="📈"):
     # busca = consulta_news(busca_news)
     
     
-    for i in busca_news:
+    for assunto in busca_news:
             
-        busca = consulta_news(i) 
+        busca = consulta_news(assunto) 
           
         for i in range(1, 3):
             if busca_news:
@@ -221,7 +221,7 @@ with st.expander("Índices de Mercado", icon="📈"):
                 noticia = busca[i]["desc"]
                 link = busca[i]["link"]
                          
-                tabela_news.append([titulo, fonte, quando, noticia, link, busca_news])
+                tabela_news.append([titulo, fonte, quando, noticia, link, assunto])
                 pass
             
                     
