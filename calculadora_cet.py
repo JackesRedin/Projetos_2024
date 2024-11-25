@@ -53,8 +53,8 @@ def consulta_api(codigo_bacen):
 #armazenando consultas api bacen
 with st.spinner("Aguarde... Atualizando Api Bacen"):
     dados_selic = consulta_api(432)
-    time.sleep(1)
-    dados_ipca = consulta_api(433)
+    
+    dados_ipca = consulta_api(433) #VERIFICAR INDICE FICANDO NAN
     dados_igpm = consulta_api(189)
     dados_usd = consulta_api(1)
 
@@ -140,7 +140,7 @@ ipca_atual_dt = pd.to_datetime(ipca_atual_dt).strftime('%d/%m/%Y')
 
 
 
-with st.expander("Índices de Mercado", icon="📈"):
+with st.expander("Notícias / Índices de Mercado", icon="📈"):
     coll1, coll2, coll3, coll4 = st.columns(4)
     #quadrinhos  de indicadores e métricas
     # coll1.metric(label="Taxa Meta Selic Anterior¹", value=f"{selic_anterior}%")
@@ -174,7 +174,7 @@ with st.expander("Índices de Mercado", icon="📈"):
     if 'default_busca' not in st.session_state:
         st.session_state.default_busca = st.session_state.opcoes_busca[1:3]
 
-    novo_assunto = colll1.text_input("*Digite para adicionar uma palavra na lista:*")
+    novo_assunto = colll1.text_input("*Digite para adicionar uma palavra na lista:*", )
     
     # Se houver um novo assunto e ele não estiver na lista, adicioná-lo e atualizar o default
     if novo_assunto and novo_assunto not in st.session_state.opcoes_busca:
@@ -280,7 +280,7 @@ valor_emprestimo = st.sidebar.number_input("Valor do Empréstimo", value= 129918
                                            ) #format="%0.2f"
 taxa_am = st.sidebar.number_input("Taxa ao mês", value=2.7, placeholder="2,7", help="%taxa Ao Mês")
 taxa_am = taxa_am/100
-parcelas = st.sidebar.number_input("Parcelas", value=18, placeholder="12", step=1, max_value=60)
+parcelas = st.sidebar.number_input("Parcelas", value=18, placeholder="12", step=1, max_value=240)
 tac = st.sidebar.number_input("TAC", value=3000, placeholder="1000", step=100)
 dt_inicio = st.sidebar.date_input("Data Empréstimo", format="DD/MM/YYYY" ) 
 
