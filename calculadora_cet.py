@@ -280,7 +280,7 @@ valor_emprestimo = st.sidebar.number_input("Valor do Empréstimo", value= 129918
                                            ) #format="%0.2f"
 taxa_am = st.sidebar.number_input("Taxa ao mês", value=2.7, placeholder="2,7", help="%taxa Ao Mês")
 taxa_am = taxa_am/100
-parcelas = st.sidebar.number_input("Parcelas", value=18, placeholder="12", step=1, max_value=240)
+parcelas = st.sidebar.number_input("Parcelas", value=18, placeholder="12", step=1, max_value=360, help="Máx 360")
 tac = st.sidebar.number_input("TAC", value=3000, placeholder="1000", step=100)
 dt_inicio = st.sidebar.date_input("Data Empréstimo", format="DD/MM/YYYY" ) 
 
