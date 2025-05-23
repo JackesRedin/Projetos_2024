@@ -288,9 +288,17 @@ st.sidebar.divider()
 
 
 #dados fixos
-iof_dia = 0.000041
-iof_max = 0.0150  #limitador de iof aplicada qdo a parcela ultrapassa o 365 dia
-iof_add = 0.0038 #iof adicional
+
+#IOF ANTIGO
+# iof_dia = 0.000041
+# iof_max = 0.0150  #limitador de iof aplicada qdo a parcela ultrapassa o 365 dia
+# iof_add = 0.0038 #iof adicional
+
+#Nova IOF Decreto 12.466, de 22 de maio de 2025
+iof_dia = 0.000082
+iof_max = 0.0300  #limitador de iof aplicada qdo a parcela ultrapassa o 365 dia
+iof_add = 0.0095 #iof adicional
+
 
 #dados calculados
 #valor financiado
